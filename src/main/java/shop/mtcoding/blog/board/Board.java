@@ -7,9 +7,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import shop.mtcoding.blog.reply.Reply;
 import shop.mtcoding.blog.user.User;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Data
@@ -28,17 +31,23 @@ public class Board {
 
     @CreationTimestamp // pc -> db (날짜주입)
     private Timestamp createdAt;
-    
-    @Transient // 테이블 생성이 안됨
-    private boolean isOwner;
 
+    @Transient // 테이블 생성이 안됨
+    private boolean isBoardOwner;
+
+
+    //여기에 접근만 하면 lazyloading으로 조회 쿼리가 날라간다.
+    @OrderBy("id desc")
+    @OneToMany (mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    private List<Reply> replies = new ArrayList<>();
 
     @Builder
-    public Board(Integer id, String title, String content, User user, Timestamp createdAt) {
+    public Board(Integer id, String title, String content, User user, Timestamp createdAt, boolean isBoardOwner) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.user = user;
         this.createdAt = createdAt;
+        this.isBoardOwner = isBoardOwner;
     }
 }

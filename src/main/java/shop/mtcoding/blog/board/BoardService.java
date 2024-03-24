@@ -16,6 +16,33 @@ public class BoardService {
 
     private final BoardJPARepository boardJPARepository;
 
+    public Board 글상세보기(int boardId, User sessionUser) {
+        Board board = boardJPARepository.findByIdJoinUser(boardId)
+                .orElseThrow(() -> new Exception404("게시글을 찾을 수 없습니다"));
+
+        boolean isBoardOwner = false;
+        if(sessionUser != null){
+            if(sessionUser.getId() == board.getUser().getId()){
+                isBoardOwner = true;
+            }
+        }
+        board.setBoardOwner(isBoardOwner);
+
+        System.out.println(111111);
+        // 여기서 reply에 접근 할 때, reply 조회 쿼리가 날라간다.
+        board.getReplies().forEach(reply -> {
+            boolean isReplyOwner = false;
+            if(sessionUser != null){
+                if(sessionUser.getId() == reply.getUser().getId()){
+                    isReplyOwner = true;
+                }
+            }
+            reply.setReplyOwner(isReplyOwner);
+        });
+
+        return board;
+    }
+
     public Board 글조회(int boardId){
         Board board = boardJPARepository.findById(boardId)
                 .orElseThrow(() -> new Exception404("게시글을 찾을 수 없습니다"));
@@ -59,21 +86,5 @@ public class BoardService {
         Sort sort = Sort.by(Sort.Direction.DESC, "id");
         return boardJPARepository.findAll(sort);
     }
-
     // board, isOwner
-    public Board 글상세보기(int boardId, User sessionUser) {
-        Board board = boardJPARepository.findByIdJoinUser(boardId)
-                .orElseThrow(() -> new Exception404("게시글을 찾을 수 없습니다"));
-
-        boolean isOwner = false;
-        if(sessionUser != null){
-            if(sessionUser.getId() == board.getUser().getId()){
-                isOwner = true;
-            }
-        }
-
-        board.setOwner(isOwner);
-
-        return board;
-    }
 }
